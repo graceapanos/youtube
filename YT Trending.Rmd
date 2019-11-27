@@ -1,0 +1,91 @@
+---
+title: "YT Trending"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#**Datares Project: How Long Does it Take for a Youtube Video to Trend?**
+##First start by uploading the dataset and packages
+```{r}
+library(tidyverse)
+library(readr)
+library(haven)
+library(lubridate)
+library(ggplot2)
+read_csv("/Users/gracepanos/Desktop/youtube-new/USvideos.csv")
+yt <- read_csv("/Users/gracepanos/Desktop/youtube-new/USvideos.csv")
+```
+##The dataframe does not tell us how many days it takes to get onto the trending list, so we need to reformat the trending and publish date variables and subtract them from eachother to get this data
+```{r}
+y <- yt$publish_time
+
+data <- mutate(yt, new_date = ydm(trending_date), new_publish_date = format(as.POSIXct(y,format='%Y-%m-%d T %H:%M:%S Z'),format='%Y-%m-%d'))
+
+data$date_diff <- as.Date(as.character(data$new_date), format='%Y-%m-%d')-
+                  as.Date(as.character(data$new_publish_date), format='%Y-%m-%d')
+```
+##The data has many repeat values because many videos stay trending for multiple weeks
+###For the purpose of this project, we only care about how long it takes to make it on the trending list for the first time. We need to recode the data to omit repeat dates
+```{r}
+length(unique(data$title))
+nrow(data)
+clean <- data %>% distinct(title, .keep_all = TRUE)
+view(clean)
+```
+##Now, we want to visualize how long it takes a video to start trending. We do this by creating a histogram
+```{r}
+bruh <- as.numeric(clean$date_diff)
+hist(bruh, main = 'Histogram', xlab = 'Difference Between Trending Date minus Post Date',col = 'coral',border = 'cornsilk', xlim = c(0,18),breaks = 6000)
+
+ggplot(clean, aes(x=bruh)) + geom_histogram(binwidth= 1, color='white', aes(fill=..count..)) + labs(title = 'How Many Days Until a Video Starts Trending?', x='Days', y='Frequency') + xlim(0,10) + scale_fill_gradient('count', low='coral', high='darkgoldenrod1')
+```
+##Summary of the dataframe. This shows us how much data we're leaving out. The largest outlier is 4215 days. 75% of the data lies between 0 to 3 days
+```{r}
+summary(bruh)
+boxplot(bruh)
+head(clean)
+clean[clean$date_diff==4215,]
+view(clean)
+```
+##We want to see if this information varies by category, so we seperate it and run this again by category
+###Column for Category 24 (Entertainment) Data
+```{r}
+data24 <- clean[clean$category_id== '24',]
+bruh24 <- as.numeric(data24$date_diff)
+hist(bruh24, main = 'Histogram', xlab = 'How Many Days Until a Video Starts Trending? (Entertainment)',col = 'blueviolet',border = 'white', xlim = c(0,10),
+   breaks = 6000)
+ggplot(data24, aes(x=bruh24)) + geom_histogram(binwidth= 1, color='white', aes(fill=..count..)) + labs(title = 'Entertainment: How Many Days Until a Video Starts Trending?', x='Days', y='Frequency') + xlim(0,10) + scale_fill_gradient('count', low='deepskyblue', high='cornflowerblue')
+summary(bruh24)
+boxplot(bruh24)
+```
+###Column for Category 10 (Music) Data
+```{r}
+data10 <- clean[clean$category_id== '10',]
+bruh10 <- as.numeric(data10$date_diff)
+hist(bruh10, main = 'Histogram', xlab = 'How Many Days Until a Video Starts Trending?(Music)',col = 'darkorange',border = 'white', xlim = c(0,10),
+   breaks = 4000)
+ggplot(data10, aes(x=bruh10)) + geom_histogram(binwidth= 1, color='white', aes(fill=..count..)) + labs(title = 'Music: How Many Days Until a Video Starts Trending?', x='Days', y='Frequency') + xlim(0,10) + scale_fill_gradient('count', low='deepskyblue', high='cornflowerblue')
+summary(bruh10)
+boxplot(bruh10)
+```
+###Column for Category 26 (How to and Style) Data
+```{r}
+data26 <- clean[clean$category_id== '26',]
+bruh26 <- as.numeric(data26$date_diff)
+hist(bruh26, main = 'Histogram', xlab = 'How Many Days Until a Video Starts Trending?(How to and Style)',col = 'deepskyblue',border = 'white', xlim = c(0,10),
+   breaks = 1000)
+ggplot(data26, aes(x=bruh26)) + geom_histogram(binwidth= 1, color='white', aes(fill=..count..)) + labs(title = 'How to and Style: How Many Days Until a Video Starts Trending?', x='Days', y='Frequency') + xlim(0,10) + scale_fill_gradient('count', low='deepskyblue', high='cornflowerblue')
+summary(bruh26)
+boxplot(bruh26)
+```
+
+```{r}
+read_csv("/Users/gracepanos/Desktop/youtube-new/USvideos.csv")
+ ```
